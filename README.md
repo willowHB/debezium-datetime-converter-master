@@ -14,6 +14,7 @@ Debezium [custom converter](https://debezium.io/documentation/reference/developm
 | Datetime<br/>(2021-01-28 17:29:04)  | LocalDateTime<br/>(2021-01-28T17:29:04)  | Long<br/>(1611854944000)          | io.debezium.time.Timestamp          |
 
 > For details, please refer to [this article](https://blog.hufeifei.cn/2021/03/13/DB/mysql-binlog-parser/)
+> 在此基础上，我对代码进行了改造，我需要把MySql的Datetime类型转成时间戳，即long类型数值，然后存入es.(其他类型可以自行修改)
 
 # Usage
 
@@ -22,13 +23,13 @@ Debezium [custom converter](https://debezium.io/documentation/reference/developm
 2. In debezium-connector, Add the following configuration: 
 
 ```properties
-connector.class=io.debezium.connector.mysql.MySqlConnector
+"connector.class": "io.debezium.connector.mysql.MySqlConnector",
 # ...
-converters=datetime
-datetime.type=com.darcytech.debezium.converter.MySqlDateTimeConverter
-datetime.format.date=yyyy-MM-dd
-datetime.format.time=HH:mm:ss
-datetime.format.datetime=yyyy-MM-dd HH:mm:ss
-datetime.format.timestamp=yyyy-MM-dd HH:mm:ss
-datetime.format.timestamp.zone=UTC+8
+"converters": "datetime",
+"datetime.type": "com.darcytech.debezium.converter.MySqlDateTimeConverter",
+"datetime.format": "yyyy-MM-dd",
+"datetime.format.time": "HH:mm:ss",
+"datetime.format.datetime": "yyyy-MM-dd HH:mm:ss",
+"datetime.format.timestamp": "yyyy-MM-dd HH:mm:ss",
+"datetime.format.timestamp.zone": "+08:00"
 ```
