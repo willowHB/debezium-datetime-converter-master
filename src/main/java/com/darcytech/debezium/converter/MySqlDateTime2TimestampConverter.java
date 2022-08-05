@@ -11,7 +11,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 
 /**
- * 处理Debezium时间转换的问题
+ * 处理Debezium时间转换的问题：全部转成timestamp
  * Debezium默认将MySQL中datetime类型转成UTC的时间戳({@link io.debezium.time.Timestamp})，时区是写死的没法儿改，
  * 导致数据库中设置的UTC+8，到kafka中变成了多八个小时的long型时间戳
  * Debezium默认将MySQL中的timestamp类型转成UTC的字符串。
@@ -25,14 +25,14 @@ import java.util.function.Consumer;
  * @see io.debezium.connector.mysql.converters.TinyIntOneToBooleanConverter
  */
 @Slf4j
-public class MySqlDateTimeConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
+public class MySqlDateTime2TimestampConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
 
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
     private DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME;
     private DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
     private DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
 
-    private ZoneId timestampZoneId = ZoneId.systemDefault();
+    private static ZoneId timestampZoneId = ZoneId.systemDefault();
 
     @Override
     public void configure(Properties props) {
@@ -62,19 +62,19 @@ public class MySqlDateTimeConverter implements CustomConverter<SchemaBuilder, Re
         SchemaBuilder schemaBuilder = null;
         Converter converter = null;
         if ("DATE".equals(sqlType)) {
-            schemaBuilder = SchemaBuilder.string().optional().name("com.darcytech.debezium.date.string");
+            schemaBuilder = SchemaBuilder.int64().optional().name("com.darcytech.debezium.date.int64");
             converter = this::convertDate;
         }
         if ("TIME".equals(sqlType)) {
-            schemaBuilder = SchemaBuilder.string().optional().name("com.darcytech.debezium.time.string");
+            schemaBuilder = SchemaBuilder.int64().optional().name("com.darcytech.debezium.time.int64");
             converter = this::convertTime;
         }
         if ("DATETIME".equals(sqlType)) {
-            schemaBuilder = SchemaBuilder.string().optional().name("com.darcytech.debezium.datetime.string");
-            converter = this::convertDateTime;
+            schemaBuilder = SchemaBuilder.int64().optional().name("com.darcytech.debezium.datetime.int64");
+//            converter = this::convertDateTime;
         }
         if ("TIMESTAMP".equals(sqlType)) {
-            schemaBuilder = SchemaBuilder.string().optional().name("com.darcytech.debezium.timestamp.string");
+            schemaBuilder = SchemaBuilder.int64().optional().name("com.darcytech.debezium.timestamp.int64");
             converter = this::convertTimestamp;
         }
         if (schemaBuilder != null) {
@@ -83,41 +83,49 @@ public class MySqlDateTimeConverter implements CustomConverter<SchemaBuilder, Re
         }
     }
 
-    private String convertDate(Object input) {
+    private Long convertDate(Object input) {
         if (input instanceof LocalDate) {
-            return dateFormatter.format((LocalDate) input);
+
+            LocalDate localDate = (LocalDate) input;
+            return localDate.atStartOfDay(ZoneOffset.of(timestampZoneId.getId())).toInstant().toEpochMilli();
+
         }
         if (input instanceof Integer) {
-            LocalDate date = LocalDate.ofEpochDay((Integer) input);
-            return dateFormatter.format(date);
+            LocalDate localDate = LocalDate.ofEpochDay((Integer) input);
+            return localDate.atStartOfDay(ZoneOffset.of(timestampZoneId.getId())).toInstant().toEpochMilli();
         }
         return null;
     }
 
-    private String convertTime(Object input) {
+    private Long convertTime(Object input) {
         if (input instanceof Duration) {
             Duration duration = (Duration) input;
             long seconds = duration.getSeconds();
-            int nano = duration.getNano();
-            LocalTime time = LocalTime.ofSecondOfDay(seconds).withNano(nano);
-            return timeFormatter.format(time);
+            return seconds * 1000;
         }
         return null;
     }
 
-    private String convertDateTime(Object input) {
+    /**
+     * DateTime转成时间戳long类型
+     *
+     * @param input
+     * @return
+     */
+    public static Long convertDateTime(Object input) {
         if (input instanceof LocalDateTime) {
-            return datetimeFormatter.format((LocalDateTime) input);
+            LocalDateTime localDateTime = (LocalDateTime) input;
+            return localDateTime.toInstant(ZoneOffset.of(timestampZoneId.getId())).toEpochMilli();
         }
         return null;
     }
 
-    private String convertTimestamp(Object input) {
+    private Long convertTimestamp(Object input) {
         if (input instanceof ZonedDateTime) {
             // mysql的timestamp会转成UTC存储，这里的zonedDatetime都是UTC时间
             ZonedDateTime zonedDateTime = (ZonedDateTime) input;
-            LocalDateTime localDateTime = zonedDateTime.withZoneSameInstant(timestampZoneId).toLocalDateTime();
-            return timestampFormatter.format(localDateTime);
+            LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();
+            return localDateTime.toInstant(ZoneOffset.of(timestampZoneId.getId())).toEpochMilli();
         }
         return null;
     }

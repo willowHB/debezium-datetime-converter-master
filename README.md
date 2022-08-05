@@ -5,7 +5,10 @@
 
 # debezium-datetime-converter
 
-Debezium [custom converter](https://debezium.io/documentation/reference/development/converters.html) is used to deal with mysql [datetime type problems](https://debezium.io/documentation/reference/1.5/connectors/mysql.html#mysql-temporal-types).
+Debezium [custom converter](https://debezium.io/documentation/reference/development/converters.html) is used to deal
+with
+mysql [datetime type problems](https://debezium.io/documentation/reference/1.5/connectors/mysql.html#mysql-temporal-types)
+.
 
 | mysql                               | binlog-connector                         | debezium                          | schema                 |
 | ----------------------------------- | ---------------------------------------- | --------------------------------- | ----------------------------------- |
@@ -15,20 +18,34 @@ Debezium [custom converter](https://debezium.io/documentation/reference/developm
 | Datetime<br/>(2021-01-28 17:29:04)  | LocalDateTime<br/>(2021-01-28T17:29:04)  | Long<br/>(1611854944000)          | io.debezium.time.Timestamp          |
 
 > For details, please refer to [this article](https://blog.hufeifei.cn/2021/03/13/DB/mysql-binlog-parser/)
-> 
+>
 > <font color=#00ffff size=4>在此基础上，我对代码进行了改造，我需要把MySql的Datetime类型转成时间戳，即long类型数值，然后存入es.(其他类型可以自行修改)</font>
 
 # Usage
 
-1. [Download](https://github.com/holmofy/debezium-datetime-converter/releases) the extended jar package and put it in the same level directory of the debezium plugin.
+1. [Download](https://github.com/holmofy/debezium-datetime-converter/releases) the extended jar package and put it in
+   the same level directory of the debezium plugin.
 
-2. In debezium-connector, Add the following configuration: 
+2. In debezium-connector,如果想把时间转换成string类型的格式, Add the following configuration:
 
 ```properties
 "connector.class": "io.debezium.connector.mysql.MySqlConnector",
 # ...
 "converters": "datetime",
 "datetime.type": "com.darcytech.debezium.converter.MySqlDateTimeConverter",
+"datetime.format": "yyyy-MM-dd",
+"datetime.format.time": "HH:mm:ss",
+"datetime.format.datetime": "yyyy-MM-dd HH:mm:ss",
+"datetime.format.timestamp": "yyyy-MM-dd HH:mm:ss",
+"datetime.format.timestamp.zone": "UTC+8"
+```
+
+3. In debezium-connector, 如果想把时间转换成timestamp,Add the following configuration:
+```properties
+"connector.class": "io.debezium.connector.mysql.MySqlConnector",
+# ...
+"converters": "datetime",
+"datetime.type": "com.darcytech.debezium.converter.MySqlDateTime2TimestampConverter",
 "datetime.format": "yyyy-MM-dd",
 "datetime.format.time": "HH:mm:ss",
 "datetime.format.datetime": "yyyy-MM-dd HH:mm:ss",
