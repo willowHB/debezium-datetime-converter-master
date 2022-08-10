@@ -32,7 +32,7 @@ public class MySqlDateTime2TimestampConverter implements CustomConverter<SchemaB
     private DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
     private DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
 
-    private static ZoneId timestampZoneId = ZoneId.systemDefault();
+    private ZoneId timestampZoneId = ZoneId.systemDefault();
 
     @Override
     public void configure(Properties props) {
@@ -71,7 +71,7 @@ public class MySqlDateTime2TimestampConverter implements CustomConverter<SchemaB
         }
         if ("DATETIME".equals(sqlType)) {
             schemaBuilder = SchemaBuilder.int64().optional().name("com.darcytech.debezium.datetime.int64");
-//            converter = this::convertDateTime;
+            converter = this::convertDateTime;
         }
         if ("TIMESTAMP".equals(sqlType)) {
             schemaBuilder = SchemaBuilder.int64().optional().name("com.darcytech.debezium.timestamp.int64");
@@ -112,7 +112,7 @@ public class MySqlDateTime2TimestampConverter implements CustomConverter<SchemaB
      * @param input
      * @return
      */
-    public static Long convertDateTime(Object input) {
+    public Long convertDateTime(Object input) {
         if (input instanceof LocalDateTime) {
             LocalDateTime localDateTime = (LocalDateTime) input;
             return localDateTime.toInstant(ZoneOffset.of(timestampZoneId.getId())).toEpochMilli();

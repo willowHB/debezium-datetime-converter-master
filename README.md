@@ -24,7 +24,7 @@ mysql [datetime type problems](https://debezium.io/documentation/reference/1.5/c
 # Usage
 
 1. [Download](https://github.com/holmofy/debezium-datetime-converter/releases) the extended jar package and put it in
-   the same level directory of the debezium plugin.
+   the same level directory of the debezium plugin.或者debezium的lib目录下，当然debezium本身也是在plugin目录下的。
 
 2. In debezium-connector,如果想把时间转换成string类型的格式, Add the following configuration:
 
