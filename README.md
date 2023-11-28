@@ -52,3 +52,8 @@ mysql [datetime type problems](https://debezium.io/documentation/reference/1.5/c
 "datetime.format.timestamp": "yyyy-MM-dd HH:mm:ss",
 "datetime.format.timestamp.zone": "+08:00"
 ```
+同步前mysql数据：(mysql时区：北京时间)
+![image](https://github.com/willowHB/debezium-datetime-converter-master/assets/42429887/1ddbbb45-41e6-49c0-a5da-63cc29c4e9aa)
+
+同步后数据：
+![image](https://github.com/willowHB/debezium-datetime-converter-master/assets/42429887/5bd6df8a-ff54-4282-932d-01b6faad5cfa)
